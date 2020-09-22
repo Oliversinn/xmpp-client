@@ -1,11 +1,39 @@
 import questionary
 import sleekxmpp
 import ssl
+from sleekxmpp.exceptions import IqError, IqTimeout
+
+class Register(sleekxmpp.ClientXMPP):
+    def __init__(self, jid, password):
+        self.add_event_handler('session_start', self.start, threaded=True)
+        self.add_event_handler('register', self.register, threaded=True)
+
+    def start(self, event):
+        self.send_presence()
+        self.get_roster()
+        self.disconnect()
+
+    def register(self, iq):
+        resp = self.Iq()
+        resp['type'] = 'set'
+        resp['register']['username'] = self.boundjid.user
+        resp['register']['password'] = self.password
+
+        try:
+            resp.send(now=True)
+            print(f"Se creo el usuario para {self.boundjid}")
+        except IqError as e:
+            print(f"No se pudo crear el usuario: {e.iq['error']['text']}")
+            self.disconnect()
+        except IqTimeout:
+            print("El server no responde D:")
+            self.disconnect()
+        
 
 class Client(sleekxmpp.ClientXMPP):
-    def __init__(self, username, password, instance_name='redes2020.xyz'):
-        sleekxmpp.ClientXMPP.__init__(self, username, password)
-        self.username = username
+    def __init__(self, jid, password, instance_name='redes2020.xyz'):
+        sleekxmpp.ClientXMPP.__init__(self, jid, password)
+        self.username = jid
 
         self.add_event_handler('session_start', self.start, threaded=False, disposable=True)
         self.add_event_handler('message',self.receive, threaded=True, disposable=False)
