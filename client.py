@@ -7,6 +7,11 @@ class Register(sleekxmpp.ClientXMPP):
     def __init__(self, jid, password):
         self.add_event_handler('session_start', self.start, threaded=True)
         self.add_event_handler('register', self.register, threaded=True)
+        xmpp = RegisterBot(opts.jid, opts.password)
+        xmpp.register_plugin('xep_0030') # Service Discovery
+        xmpp.register_plugin('xep_0004') # Data forms
+        xmpp.register_plugin('xep_0066') # Out-of-band Data
+        xmpp.register_plugin('xep_0077') # In-band Registration
 
     def start(self, event):
         self.send_presence()
@@ -64,7 +69,53 @@ class Client(sleekxmpp.ClientXMPP):
         if message['type'] in ('chat', 'normal'):
             print(f"{message['from'].user}> {message['body']}")
 
+    def login(self):
+        logged = False
+        if self.connect():
+            self.process()
+            logged = True
+            print('Has iniciado sesion!')
+        else:
+            print('No se pudo iniciar sesion.')
+        return logged
+
     
+if __name__ == '__main__':
+    home = ''
+    logged = False
+
+    while home != 'Salir':
+        if not logged:
+            print('============= Inicio de Sesion =============')
+            home = questionary.select(
+                'Escoja una opcion',
+                choices=['Salir', 'Iniciar Sesion', 'Registrarse']
+            ).ask()
+
+            if home == 'Iniciar Sesion':
+                username = input('Username: ')
+                password = input('Password: ')
+                client = Cliente(username+'@redes2020.xyz', password)
+                logged = client.login()
+
+            elif home == 'Registrarse':
+                username = input('Username: ')
+                password = input('Password: ')
+                registration = Register(username+'@redes2020.xyz',password)
+                if registration.connect():
+                    registration.process(block=True)
+                    print('Usuario registrado!')
+                else:
+                    print('No se pudo registrar :(')
+
+        else:
+            
+
+
+
+
+
+
 
 
         
