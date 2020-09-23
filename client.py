@@ -2,6 +2,7 @@ import questionary
 import sleekxmpp
 import ssl
 from sleekxmpp.exceptions import IqError, IqTimeout
+from sleekxmpp.xmlstream.stanzabase import ET, ElementBase
 
 # usuario oliver
 # password oliver
@@ -80,6 +81,24 @@ class Client(sleekxmpp.ClientXMPP):
         else:
             print('No se pudo iniciar sesion.')
             return False
+
+    def deleteUser(self):
+        iq = self.make_iq_set(ito='redes2020.xyz', ifrom=self.boundjid.user)
+        xml = ET.fromstring("<query xmlns='jabber:iq:register'>\
+                                <remove/>\
+                            </query>")
+        iq.append(xml)
+        
+        try:
+            response = iq.send()
+            if response['type'] == 'result':
+                print("Usuario eliminado")
+        except IqError as e:
+            print(f"No se pudo eliminar el usuario\n {e.iq['error']['text']}")
+            self.disconnect()
+        except IqTimeout:
+            print("El server no responde D:")
+            self.disconnect()
         
 
     
@@ -125,6 +144,10 @@ if __name__ == '__main__':
                     'Enviar archivo'
                 ]
             ).ask()
+
+            if menu == 'Eliminar usuario':
+                client.deleteUser()
+                menu = 'Cerrar sesion'
 
             if menu == 'Cerrar sesion':
                 client.disconnect()
