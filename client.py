@@ -3,15 +3,18 @@ import sleekxmpp
 import ssl
 from sleekxmpp.exceptions import IqError, IqTimeout
 
+# usuario oliver
+# password oliver
+
 class Register(sleekxmpp.ClientXMPP):
     def __init__(self, jid, password):
+        sleekxmpp.ClientXMPP.__init__(self, jid, password)
         self.add_event_handler('session_start', self.start, threaded=True)
         self.add_event_handler('register', self.register, threaded=True)
-        xmpp = RegisterBot(opts.jid, opts.password)
-        xmpp.register_plugin('xep_0030') # Service Discovery
-        xmpp.register_plugin('xep_0004') # Data forms
-        xmpp.register_plugin('xep_0066') # Out-of-band Data
-        xmpp.register_plugin('xep_0077') # In-band Registration
+        self.register_plugin('xep_0030') # Service Discovery
+        self.register_plugin('xep_0004') # Data forms
+        self.register_plugin('xep_0066') # Out-of-band Data
+        self.register_plugin('xep_0077') # In-band Registration
 
     def start(self, event):
         self.send_presence()
@@ -28,7 +31,7 @@ class Register(sleekxmpp.ClientXMPP):
             resp.send(now=True)
             print(f"Se creo el usuario para {self.boundjid}")
         except IqError as e:
-            print(f"No se pudo crear el usuario: {e.iq['error']['text']}")
+            print(f"No se pudo crear el usuario\n {e.iq['error']['text']}")
             self.disconnect()
         except IqTimeout:
             print("El server no responde D:")
@@ -104,7 +107,6 @@ if __name__ == '__main__':
                 registration = Register(username+'@redes2020.xyz',password)
                 if registration.connect():
                     registration.process(block=True)
-                    print('Usuario registrado!')
                 else:
                     print('No se pudo registrar :(')
 
@@ -116,7 +118,7 @@ if __name__ == '__main__':
                     'Eliminar usuario',
                     'Mostrar todos los usuarios',
                     'Agregar un usuario a los contactos',
-                    'Mostrar detalles de usuario',
+                    'Mostrar detalles de un contacto',
                     'Enviar mensaje directo',
                     'Conversaciones grupales',
                     'Definir mensaje de presencia',
