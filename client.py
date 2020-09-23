@@ -109,7 +109,21 @@ if __name__ == '__main__':
                     print('No se pudo registrar :(')
 
         else:
-            
+            chat = questionary.select(
+                '=======================================',
+                choices=[
+                    'Cerrar sesion',
+                    'Eliminar usuario',
+                    'Mostrar todos los usuarios',
+                    'Agregar un usuario a los contactos',
+                    'Mostrar detalles de usuario',
+                    'Enviar mensaje directo',
+                    'Conversaciones grupales',
+                    'Definir mensaje de presencia',
+                    'Enviar archivo'
+                ]
+            )
+
 
 
 
