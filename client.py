@@ -88,7 +88,6 @@ if __name__ == '__main__':
     logged = False
 
     while home != 'Salir':
-        print(f"logged: {logged}")
         if not logged:
             print('============= Inicio de Sesion =============')
             home = questionary.select(
@@ -111,10 +110,8 @@ if __name__ == '__main__':
                     registration.process(block=True)
                 else:
                     print('No se pudo registrar :(')
-            print('super salio')
-
         else:
-            chat = questionary.select(
+            menu = questionary.select(
                 '============== Menu ==============',
                 choices=[
                     'Cerrar sesion',
@@ -128,6 +125,10 @@ if __name__ == '__main__':
                     'Enviar archivo'
                 ]
             ).ask()
+
+            if menu == 'Cerrar sesion':
+                client.disconnect()
+                logged = False
 
 
 
