@@ -147,8 +147,52 @@ class Client(sleekxmpp.ClientXMPP):
     def addUser(self):
         username = input('Username que quiere agregar: ')
         try:
-            self.send_presence_subscription(pto=username+'redes2020.xyz')
+            self.send_presence_subscription(pto=username+'@redes2020.xyz')
             print('Se agregó el usuario', username)
+        except IqError as e:
+            print('No se pudo agregar usuario a los contactos',e)
+        except IqTimeout:
+            print("El server no responde D:")
+            self.disconnect()
+
+    def userInfo(self):
+        username = input('Username que desea consultar: ')
+        iq = self.Iq()
+        iq['type'] = 'set'
+        iq['id'] = 'search_result'
+        iq['to'] = 'search.redes2020.xyz'
+
+        item = ET.fromstring("<query xmlns='jabber:iq:search'>\
+                                <x xmlns='jabber:x:data' type='submit'>\
+                                    <field type='hidden' var='FORM_TYPE'>\
+                                        <value>jabber:iq:search</value>\
+                                    </field>\
+                                    <field var='Username'>\
+                                        <value>1</value>\
+                                    </field>\
+                                    <field var='search'>\
+                                        <value>" + username + '@redes2020.xyz'+ "</value>\
+                                    </field>\
+                                </x>\
+                              </query>")
+        iq.append(item)
+        try:
+            response = iq.send()
+            data = []
+            temp = []
+            cont = 0
+            for i in response.findall('.//{jabber:x:data}value'):
+                cont += 1
+                txt = ''
+                if i.text != None:
+                    txt = i.text
+
+                temp.append(txt)
+                if cont == 4:
+                    cont = 0
+                    data.append(temp)
+                    temp = []
+            return data
         except IqError as e:
             print('No se pudo agregar usuario a los contactos',e)
         except IqTimeout:
@@ -193,7 +237,7 @@ if __name__ == '__main__':
                     'Eliminar usuario',
                     'Mostrar todos los usuarios',
                     'Agregar un usuario a los contactos',
-                    'Mostrar detalles de un contacto',
+                    'Mostrar detalles de un usuario',
                     'Enviar mensaje directo',
                     'Conversaciones grupales',
                     'Definir mensaje de presencia',
@@ -214,6 +258,9 @@ if __name__ == '__main__':
 
             if menu == 'Agregar un usuario a los contactos':
                 client.addUser()
+            
+            if menu == 'Mostrar detalles de un usuario':
+                print(client.userInfo())
 
 
 
