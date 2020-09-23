@@ -99,6 +99,51 @@ class Client(sleekxmpp.ClientXMPP):
         except IqTimeout:
             print("El server no responde D:")
             self.disconnect()
+
+    def getUsers(self):
+        iq = self.Iq()
+        iq['type'] = 'set'
+        iq['id'] = 'search_result'
+        iq['to'] = 'search.redes2020.xyz'
+        xml = ET.fromstring("<query xmlns='jabber:iq:search'>\
+                                <x xmlns='jabber:x:data' type='submit'>\
+                                    <field type='hidden' var='FORM_TYPE'>\
+                                        <value>jabber:iq:search</value>\
+                                    </field>\
+                                    <field var='Username'>\
+                                        <value>1</value>\
+                                    </field>\
+                                    <field var='search'>\
+                                        <value>*</value>\
+                                    </field>\
+                                </x>\
+                              </query>")
+        iq.append(xml)
+        try:
+            response = iq.send()
+            data = []
+            temp = []
+            cont = 0
+            for i in response.findall('.//{jabber:x:data}value'):
+                cont += 1
+                txt = ''
+                if i.text != None:
+                    txt = i.text
+
+                temp.append(txt)
+                if cont == 4:
+                    cont = 0
+                    data.append(temp)
+                    temp = []
+
+            return data
+        except IqError as e:
+            print(f"No se pudo obtener el listado de usuarios\n {e.iq['error']['text']}")
+            self.disconnect()
+        except IqTimeout:
+            print("El server no responde D:")
+            self.disconnect()
+
         
 
     
@@ -152,6 +197,9 @@ if __name__ == '__main__':
             if menu == 'Cerrar sesion':
                 client.disconnect()
                 logged = False
+
+            if menu == 'Mostrar todos los usuarios':
+                print(client.getUsers())
 
 
 
