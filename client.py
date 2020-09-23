@@ -73,14 +73,14 @@ class Client(sleekxmpp.ClientXMPP):
             print(f"{message['from'].user}> {message['body']}")
 
     def login(self):
-        logged = False
         if self.connect():
             self.process()
-            logged = True
             print('Has iniciado sesion!')
+            return True
         else:
             print('No se pudo iniciar sesion.')
-        return logged
+            return False
+        
 
     
 if __name__ == '__main__':
@@ -88,6 +88,7 @@ if __name__ == '__main__':
     logged = False
 
     while home != 'Salir':
+        print(f"logged: {logged}")
         if not logged:
             print('============= Inicio de Sesion =============')
             home = questionary.select(
@@ -98,8 +99,9 @@ if __name__ == '__main__':
             if home == 'Iniciar Sesion':
                 username = input('Username: ')
                 password = input('Password: ')
-                client = Cliente(username+'@redes2020.xyz', password)
-                logged = client.login()
+                client = Client(username+'@redes2020.xyz', password)
+                if client.login():
+                    logged = True
 
             elif home == 'Registrarse':
                 username = input('Username: ')
@@ -109,10 +111,11 @@ if __name__ == '__main__':
                     registration.process(block=True)
                 else:
                     print('No se pudo registrar :(')
+            print('super salio')
 
         else:
             chat = questionary.select(
-                '=======================================',
+                '============== Menu ==============',
                 choices=[
                     'Cerrar sesion',
                     'Eliminar usuario',
@@ -124,7 +127,7 @@ if __name__ == '__main__':
                     'Definir mensaje de presencia',
                     'Enviar archivo'
                 ]
-            )
+            ).ask()
 
 
 
