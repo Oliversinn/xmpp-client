@@ -144,6 +144,17 @@ class Client(sleekxmpp.ClientXMPP):
             print("El server no responde D:")
             self.disconnect()
 
+    def addUser(self):
+        username = input('Username que quiere agregar: ')
+        try:
+            self.send_presence_subscription(pto=username+'redes2020.xyz')
+            print('Se agregó el usuario', username)
+        except IqError as e:
+            print('No se pudo agregar usuario a los contactos',e)
+        except IqTimeout:
+            print("El server no responde D:")
+            self.disconnect()
+
         
 
     
@@ -200,6 +211,10 @@ if __name__ == '__main__':
 
             if menu == 'Mostrar todos los usuarios':
                 print(client.getUsers())
+
+            if menu == 'Agregar un usuario a los contactos':
+                client.addUser()
+
 
 
 
