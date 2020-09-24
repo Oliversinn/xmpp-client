@@ -45,8 +45,10 @@ class Client(sleekxmpp.ClientXMPP):
         self.username = jid
         self.contacts = []
 
-        self.add_event_handler('session_start', self.start, threaded=False, disposable=True)
-        self.add_event_handler('message',self.receive, threaded=True, disposable=False)
+        self.add_event_handler('session_start', self.start)
+        self.add_event_handler('message',self.receive)
+        self.add_event_handler("presence_subscribe", self.subscribeNotification)
+
 
         self.register_plugin('xep_0077')
         self.register_plugin('xep_0030') # Service Discovery
@@ -62,6 +64,10 @@ class Client(sleekxmpp.ClientXMPP):
             self.process(block=False)
         else:
             raise Exception("No se pudo conectar!!! D:")
+
+    def subscribeNotification(self, presence):
+        user = presence['from']
+        print(f"**{user} te agrego!**")
     
     def close(self):
         print('Cerrando la coneccion XMPP...')
@@ -84,7 +90,7 @@ class Client(sleekxmpp.ClientXMPP):
         message.append(xml)
         try:
             message.send()
-         except IqError as e:
+        except IqError as e:
             print(f"No se pudo notificar que estas conectado\n {e.iq['error']['text']}")
             self.disconnect()
         except IqTimeout:
@@ -103,8 +109,7 @@ class Client(sleekxmpp.ClientXMPP):
         print('Mensaje enviado!')
 
     def receive(self, message):
-        if message['type'] in ('chat', 'normal'):
-            print(f"{message['from'].user}> {message['body']}")
+        print(f"{message['type']} {message['from'].user}> {message['body']}")
 
     def login(self):
         if self.connect():
@@ -136,6 +141,7 @@ class Client(sleekxmpp.ClientXMPP):
     def getUsers(self):
         iq = self.Iq()
         iq['type'] = 'set'
+        iq['from'] = self.boundjid.bare
         iq['id'] = 'search_result'
         iq['to'] = 'search.redes2020.xyz'
         xml = ET.fromstring("<query xmlns='jabber:iq:search'>\
@@ -241,7 +247,7 @@ class Client(sleekxmpp.ClientXMPP):
     def sendMessageToRoom(self):
         room = input('Nombre de la sala: ')
         message = input('Mensaje: ')
-        self.send_message(mto=room, mbody=body, mtype='groupchat')
+        self.send_message(mto=room, mbody=message, mtype='groupchat')
 
     def changePresence(self):
         status = input("Nuevo mensaje de presencia: ")
