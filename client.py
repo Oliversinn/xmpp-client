@@ -43,9 +43,19 @@ class Client(sleekxmpp.ClientXMPP):
     def __init__(self, jid, password, instance_name='redes2020.xyz'):
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
         self.username = jid
+        self.contacts = []
 
         self.add_event_handler('session_start', self.start, threaded=False, disposable=True)
         self.add_event_handler('message',self.receive, threaded=True, disposable=False)
+
+        self.register_plugin('xep_0077')
+        self.register_plugin('xep_0030') # Service Discovery
+        self.register_plugin('xep_0199') # XMPP Ping
+        self.register_plugin('xep_0004') # Data forms
+        self.register_plugin('xep_0077') # In-band Registration
+        self.register_plugin('xep_0045') # Mulit-User Chat (MUC)
+        self.register_plugin('xep_0096') # Send file 
+        self.register_plugin('xep_0065')
 
         if self.connect():
             print('Ya estas conectado :D')
@@ -58,16 +68,39 @@ class Client(sleekxmpp.ClientXMPP):
         self.disconnect(wait=False)
 
     def start(self, event):
-        self.send_presence()
-        self.get_roster()
-
-    def send_msg(self, to, body):
+        self.send_presence(pshow='chat', pstatus='Conectado')
+        roaster = self.get_roster()
+        for user in roster['roster']['items'].keys():
+            self.contacts.append(user)
+        for jid in self.contacts:
+            self.notificate(jid)
+    
+    def notificate(self, jid):
         message = self.Message()
-        message['to'] = to
+        message['to'] = jid
         message['type'] = 'chat'
-        message['body'] = body
-        print(f"Sendind message: {body}")
+        message['body'] = 'Ya estoy conectado!!!'
+        xml = ET.fromstring("<active xmlns='http://jabber.org/protocol/chatstates'/>")
+        message.append(xml)
+        try:
+            message.send()
+         except IqError as e:
+            print(f"No se pudo notificar que estas conectado\n {e.iq['error']['text']}")
+            self.disconnect()
+        except IqTimeout:
+            print("El server no responde D:")
+            self.disconnect()
+
+
+
+    def send_msg(self):
+        message = self.Message()
+        message['to'] = input('Usuario al que enviar mensaje: ')
+        message['type'] = 'chat'
+        message['body'] = input('Mensaje: ')
+        print(f"Sendind message: {message['body'] }")
         message.send()
+        print('Mensaje enviado!')
 
     def receive(self, message):
         if message['type'] in ('chat', 'normal'):
@@ -161,6 +194,7 @@ class Client(sleekxmpp.ClientXMPP):
         iq['type'] = 'set'
         iq['id'] = 'search_result'
         iq['to'] = 'search.redes2020.xyz'
+        iq['from'] = self.boundjid.bare
 
         item = ET.fromstring("<query xmlns='jabber:iq:search'>\
                                 <x xmlns='jabber:x:data' type='submit'>\
@@ -198,6 +232,22 @@ class Client(sleekxmpp.ClientXMPP):
         except IqTimeout:
             print("El server no responde D:")
             self.disconnect()
+
+    def joinRoom(self):
+        room = input('Nombre de la sala: ')
+        nickname = input('Nickname: ')
+        self.plugin['xep_0045'].joinMUC(room, nickname, wait=True)
+
+    def sendMessageToRoom(self):
+        room = input('Nombre de la sala: ')
+        message = input('Mensaje: ')
+        self.send_message(mto=room, mbody=body, mtype='groupchat')
+
+    def changePresence(self):
+        status = input("Nuevo mensaje de presencia: ")
+        self.send_presence(pshow='chat', pstatus=status)
+
+
 
         
 
@@ -239,7 +289,8 @@ if __name__ == '__main__':
                     'Agregar un usuario a los contactos',
                     'Mostrar detalles de un usuario',
                     'Enviar mensaje directo',
-                    'Conversaciones grupales',
+                    'Ingresar a una conversación grupal',
+                    'Enviar mensaje a un grupo',
                     'Definir mensaje de presencia',
                     'Enviar archivo'
                 ]
@@ -261,6 +312,15 @@ if __name__ == '__main__':
             
             if menu == 'Mostrar detalles de un usuario':
                 print(client.userInfo())
+
+            if menu == 'Enviar mensaje directo':
+                client.send_msg()
+
+            if menu == 'Ingresar a una conversación grupal':
+                client.joinRoom()
+
+            if menu == 'Enviar mensaje a un grupo':
+                client.sendMessageToRoom()
 
 
 
