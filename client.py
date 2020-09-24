@@ -7,6 +7,7 @@ from sleekxmpp.xmlstream.stanzabase import ET, ElementBase
 # usuario oliver
 # password oliver
 
+## This class holds the logic for te user registration
 class Register(sleekxmpp.ClientXMPP):
     def __init__(self, jid, password):
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
@@ -22,6 +23,7 @@ class Register(sleekxmpp.ClientXMPP):
         self.get_roster()
         self.disconnect()
 
+    #Function that registers a user.
     def register(self, iq):
         resp = self.Iq()
         resp['type'] = 'set'
@@ -38,7 +40,7 @@ class Register(sleekxmpp.ClientXMPP):
             print("El server no responde D:")
             self.disconnect()
         
-
+#This class holds all the logic and funtionality of the xmpp client
 class Client(sleekxmpp.ClientXMPP):
     def __init__(self, jid, password, instance_name='redes2020.xyz'):
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
@@ -64,15 +66,18 @@ class Client(sleekxmpp.ClientXMPP):
             self.process(block=False)
         else:
             raise Exception("No se pudo conectar!!! D:")
-
+    
+    # Notification that pops when someone subscribes to my user
     def subscribeNotification(self, presence):
         user = presence['from']
         print(f"**{user} te agrego!**")
     
+    # Function that logs out from server
     def close(self):
         print('Cerrando la coneccion XMPP...')
         self.disconnect(wait=False)
 
+    # Fuction that notifies every user that im connected and ready to chat
     def start(self, event):
         self.send_presence(pshow='chat', pstatus='Conectado')
         roaster = self.get_roster()
@@ -81,6 +86,7 @@ class Client(sleekxmpp.ClientXMPP):
         for jid in self.contacts:
             self.notificate(jid)
     
+    # function with the logic of sending the notification to every user that im connected
     def notificate(self, jid):
         message = self.Message()
         message['to'] = jid
@@ -97,20 +103,22 @@ class Client(sleekxmpp.ClientXMPP):
             print("El server no responde D:")
             self.disconnect()
 
-
-
+    # function that sends messages to an user
     def send_msg(self):
         message = self.Message()
-        message['to'] = input('Usuario al que enviar mensaje: ')
+        to = input('Usuario al que enviar mensaje: ')
+        message['to'] = to+'@redes2020.xyz'
         message['type'] = 'chat'
         message['body'] = input('Mensaje: ')
         print(f"Sendind message: {message['body'] }")
         message.send()
         print('Mensaje enviado!')
 
+    # Function that reads incoming messages
     def receive(self, message):
         print(f"{message['type']} {message['from'].user}> {message['body']}")
 
+    # Function with the login logic
     def login(self):
         if self.connect():
             self.process()
@@ -120,6 +128,7 @@ class Client(sleekxmpp.ClientXMPP):
             print('No se pudo iniciar sesion.')
             return False
 
+    # Function that deletes my user from server
     def deleteUser(self):
         iq = self.make_iq_set(ito='redes2020.xyz', ifrom=self.boundjid.user)
         xml = ET.fromstring("<query xmlns='jabber:iq:register'>\
@@ -138,6 +147,7 @@ class Client(sleekxmpp.ClientXMPP):
             print("El server no responde D:")
             self.disconnect()
 
+    # Function that shows every user on the server and its information
     def getUsers(self):
         iq = self.Iq()
         iq['type'] = 'set'
@@ -183,6 +193,7 @@ class Client(sleekxmpp.ClientXMPP):
             print("El server no responde D:")
             self.disconnect()
 
+    # Function that adds an user to the contacts library
     def addUser(self):
         username = input('Username que quiere agregar: ')
         try:
@@ -194,6 +205,7 @@ class Client(sleekxmpp.ClientXMPP):
             print("El server no responde D:")
             self.disconnect()
 
+    # Function that request an especific user information
     def userInfo(self):
         username = input('Username que desea consultar: ')
         iq = self.Iq()
@@ -239,16 +251,19 @@ class Client(sleekxmpp.ClientXMPP):
             print("El server no responde D:")
             self.disconnect()
 
+    # Function that joins you to a chat room
     def joinRoom(self):
         room = input('Nombre de la sala: ')
         nickname = input('Nickname: ')
         self.plugin['xep_0045'].joinMUC(room, nickname, wait=True)
 
+    # Fucntion that sends message to a chat room
     def sendMessageToRoom(self):
         room = input('Nombre de la sala: ')
         message = input('Mensaje: ')
         self.send_message(mto=room, mbody=message, mtype='groupchat')
 
+    # function that changes your user status on the server.
     def changePresence(self):
         status = input("Nuevo mensaje de presencia: ")
         self.send_presence(pshow='chat', pstatus=status)
