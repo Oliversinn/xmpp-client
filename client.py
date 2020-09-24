@@ -261,6 +261,7 @@ class Client(sleekxmpp.ClientXMPP):
     def sendMessageToRoom(self):
         room = input('Nombre de la sala: ')
         message = input('Mensaje: ')
+        room = room + '@conference.redes2020.xyz'
         self.send_message(mto=room, mbody=message, mtype='groupchat')
 
     # function that changes your user status on the server.
