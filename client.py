@@ -4,6 +4,10 @@ import ssl
 from sleekxmpp.exceptions import IqError, IqTimeout
 from sleekxmpp.xmlstream.stanzabase import ET, ElementBase
 
+import filetype
+import base64
+import time
+
 # usuario oliver
 # password oliver
 
@@ -109,14 +113,37 @@ class Client(sleekxmpp.ClientXMPP):
         to = input('Usuario al que enviar mensaje: ')
         message['to'] = to+'@redes2020.xyz'
         message['type'] = 'chat'
-        message['body'] = input('Mensaje: ')
+        body = input('Mensaje: ')
+        message['body'] = body
         print(f"Sendind message: {message['body'] }")
         message.send()
+        # self.send_message(mto=to+'@redes2020.xyz', mbody=body, mtype='chat')
         print('Mensaje enviado!')
 
     # Function that reads incoming messages
     def receive(self, message):
-        print(f"{message['type']} {message['from'].user}> {message['body']}")
+        print()
+        print(f"{message['from'].user}> {message['body']}")
+        # print('recieved message')
+        # if message['type'] in ('chat', 'normal'):
+        #     if message['subject'] == 'file':
+        #         body = message['body']
+        #         image = body.encode('utf-8')
+        #         image = base64.decodebytes(image)
+        #         with open('archivo_'+str(int(time.time()))+ ".png", 'wb') as archivo:
+        #             archivo.write(image)
+        #         print(f"{message['from'].user}> Te envió un archivo! lo guardamos en el directorio del cliente.")
+        #     else:
+        #         print(f"{message['from'].user}> {message['body']}")
+
+        # elif message['type'] == 'groupchat':
+        #     print(f"Groupchat: {message['from'].user}> {message['body']}")
+        
+        # else:
+        #     print(f"{message['from'].user}> {message['body']}")
+        print()
+
+
 
     # Function with the login logic
     def login(self):
@@ -255,7 +282,9 @@ class Client(sleekxmpp.ClientXMPP):
     def joinRoom(self):
         room = input('Nombre de la sala: ')
         nickname = input('Nickname: ')
-        self.plugin['xep_0045'].joinMUC(room, nickname, wait=True)
+        self.plugin['xep_0045'].joinMUC(room+"@conference.redes2020.xyz", nickname, wait=True, pstatus='Hooolaaa! ya me conecte!', pfrom=self.boundjid.full)
+        self.plugin['xep_0045'].setAffiliation(room+"@conference.redes2020.xyz", self.boundjid.full, affiliation='owner')
+        # self.plugin['xep_0045'].configureRoom(room+"@conference.redes2020.xyz", ifrom=self.boundjid.full)
 
     # Fucntion that sends message to a chat room
     def sendMessageToRoom(self):
@@ -269,31 +298,37 @@ class Client(sleekxmpp.ClientXMPP):
         status = input("Nuevo mensaje de presencia: ")
         self.send_presence(pshow='chat', pstatus=status)
 
+    def sendFile(self):
+        with open('./imagen.png') as img:
+            image = base64.b64encode(img.read()).decode('utf-8')
+        self.send_message(mto=to, mbody=image, msubject='file', mtype='chat')
+
 
 
         
 
     
 if __name__ == '__main__':
-    home = ''
+    home = 10
     logged = False
 
-    while home != 'Salir':
+    while home != 0:
         if not logged:
-            print('============= Inicio de Sesion =============')
-            home = questionary.select(
-                'Escoja una opcion',
-                choices=['Salir', 'Iniciar Sesion', 'Registrarse']
-            ).ask()
+            print('\n\n============= Inicio de Sesion =============')
+            print('0. Salir')
+            print('1. Iniciar sesion')
+            print('2. Register')
+            home = int(input('Ingrese el numero de la opcion que desea: '))
 
-            if home == 'Iniciar Sesion':
+
+            if home == 1:
                 username = input('Username: ')
                 password = input('Password: ')
                 client = Client(username+'@redes2020.xyz', password)
                 if client.login():
                     logged = True
 
-            elif home == 'Registrarse':
+            elif home == 2:
                 username = input('Username: ')
                 password = input('Password: ')
                 registration = Register(username+'@redes2020.xyz',password)
@@ -301,49 +336,73 @@ if __name__ == '__main__':
                     registration.process(block=True)
                 else:
                     print('No se pudo registrar :(')
+            
+            else:
+                print('Seleccione una opcion valida. \n')
         else:
-            menu = questionary.select(
-                '============== Menu ==============',
-                choices=[
-                    'Cerrar sesion',
-                    'Eliminar usuario',
-                    'Mostrar todos los usuarios',
-                    'Agregar un usuario a los contactos',
-                    'Mostrar detalles de un usuario',
-                    'Enviar mensaje directo',
-                    'Ingresar a una conversación grupal',
-                    'Enviar mensaje a un grupo',
-                    'Definir mensaje de presencia',
-                    'Enviar archivo'
-                ]
-            ).ask()
+            # menu = questionary.select(
+            #     '============== Menu ==============',
+            #     choices=[
+            #         'Cerrar sesion',
+            #         'Eliminar usuario',
+            #         'Mostrar todos los usuarios',
+            #         'Agregar un usuario a los contactos',
+            #         'Mostrar detalles de un usuario',
+            #         'Enviar mensaje directo',
+            #         'Ingresar a una conversación grupal',
+            #         'Enviar mensaje a un grupo',
+            #         'Definir mensaje de presencia',
+            #         'Enviar archivo'
+            #     ]
+            # ).ask()
+            print('\n\n============== Menu ==============')
+            print('1. Cerrar sesion'),
+            print('2. Eliminar usuario'),
+            print('3. Mostrar todos los usuarios'),
+            print('4. Agregar un usuario a los contactos'),
+            print('5. Mostrar detalles de un usuario'),
+            print('6. Enviar mensaje directo'),
+            print('7. Ingresar a una conversación grupal'),
+            print('8. Enviar mensaje a un grupo'),
+            print('9. Definir mensaje de presencia'),
+            print('10. Enviar archivo')
+            menu = int(input('Ingrese el numero de la opcion que desea: '))
 
-            if menu == 'Eliminar usuario':
+            if menu == 2:
                 client.deleteUser()
-                menu = 'Cerrar sesion'
+                menu = 1
 
-            if menu == 'Cerrar sesion':
+            elif menu == 1:
                 client.disconnect()
                 logged = False
 
-            if menu == 'Mostrar todos los usuarios':
+            elif menu == 3:
                 print(client.getUsers())
 
-            if menu == 'Agregar un usuario a los contactos':
+            elif menu == 4:
                 client.addUser()
             
-            if menu == 'Mostrar detalles de un usuario':
+            elif menu == 5:
                 print(client.userInfo())
 
-            if menu == 'Enviar mensaje directo':
+            elif menu == 6:
                 client.send_msg()
 
-            if menu == 'Ingresar a una conversación grupal':
+            elif menu == 7:
                 client.joinRoom()
 
-            if menu == 'Enviar mensaje a un grupo':
+            elif menu == 8:
                 client.sendMessageToRoom()
 
+            elif menu == 9:
+                client.changePresence()
+            
+            elif menu == 10:
+                client.sendFile()
+            
+            else:
+                print('Seleccione una opcion valida. \n')
+                
 
 
 
